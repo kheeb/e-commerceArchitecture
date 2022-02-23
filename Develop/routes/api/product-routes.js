@@ -48,7 +48,7 @@ router.post('/', (req, res) => {
         const productTagIdArr = req.body.tagIds.map((tag_id) => {
           return {
             product_id: product.id,
-            tag_id,
+            tag_id: tag_id,
           };
         });
         return ProductTag.bulkCreate(productTagIdArr);
@@ -66,17 +66,21 @@ router.post('/', (req, res) => {
 // update product
 router.put('/:id', (req, res) => {
   // update product data
-  Product.update(req.body, {
-    where: {
+  Product.update(req.body, 
+    { where: {
       id: req.params.id,
-    },
-  })
+     },
+    })
     .then((product) => {
       // find all associated tags from ProductTag
       return ProductTag.findAll({ where: { product_id: req.params.id } });
     })
     .then((productTags) => {
       // get list of current tag_ids
+      if (productTags.length === 0) {
+        res.status(200).json('Product has been updated!');
+        return Promise.resolve();
+      }
       const productTagIds = productTags.map(({ tag_id }) => tag_id);
       // create filtered list of new tag_ids
       const newProductTags = req.body.tagIds
